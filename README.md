@@ -67,11 +67,11 @@ HMI hoàn chỉnh về mặt luồng hoạt động. Hệ thống có thể tự
 ### Tuần 5: Logic Chẩn Đoán Lỗi (DTC Management)
 
 #### 🎯 Mục tiêu:
-Mô phỏng quy trình xử lý lỗi chẩn đoán "two-trip" theo chuẩn ô tô, một tính năng phức tạp và thực tế. 
+Mô phỏng quy trình xử lý lỗi chẩn đoán "two-trip" theo chuẩn ô tô. 
 
 #### 📝 Nhiệm vụ:
 - [ ] **ESP32:** Mô phỏng một lỗi cảm biến và gửi tin nhắn CAN chứa mã lỗi DTC.
-- [ ] **ESP32:** Hoàn thiện toàn bộ logic còn lại cho firmware. 
+- [ ] **ESP32:** Hoàn thiện toàn bộ logic còn lại cho firmware (các nút bấm,....). 
 - [ ] **Raspberry Pi (C++):** Xây dựng hoàn chỉnh lớp `DTCManager`.
 - [ ] **Raspberry Pi (C++):** Triển khai logic "two-trip" để xác nhận lỗi: lưu trạng thái "Pending", và chuyển sang "Confirmed" ở chu trình lái thứ hai. 
 - [ ] **Raspberry Pi (C++):** Lập trình logic lưu trữ DTC vào file. 
@@ -88,8 +88,9 @@ Tính năng chẩn đoán hoạt động như tài liệu mô tả. Có thể m�
 Hoàn thiện các thuật toán tính toán phức tạp (DTE) và logic lưu trữ dữ liệu bền bỉ (Odometer).
 
 #### 📝 Nhiệm vụ:
-- [ ] **Raspberry Pi (C++):** Lập trình chức năng lưu trữ giá trị Odometer vào bộ nhớ non-volatile và đọc lại khi khởi động. 
-- [ ] **Raspberry Pi (C++):** Lập trình thuật toán "pha trộn" để tính toán DTE một cách ổn định. 
+- [ ] **Raspberry Pi (C++):** Lập trình chức năng lưu trữ giá trị Odometer vào bộ nhớ non-volatile (bộ nhớ flash eMMC 
+của Pi) và đọc lại khi khởi động. 
+- [ ] **Raspberry Pi (C++):** Lập trình thuật toán để tính toán DTE một cách ổn định. 
 - [ ] **Raspberry Pi (QML):** Thêm các thành phần giao diện để hiển thị DTE, Odometer, Trip Meter và nút reset cho Trip Meter. 
 
 #### ✅ Kết quả Yêu cầu/Đạt được:
