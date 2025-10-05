@@ -1,131 +1,87 @@
 # IPC-System
-Building a Digital Instrument Cluster System and a Central Control Unit (VCU) for Electric Vehicles
-### Tuần 1: Setup môi trường, xây dựng FW cho ECU
+Building a Digital Instrument Cluster System and a Central Control Unit (VCU) for Electric Vehicles.
 
-#### 🎯 Mục tiêu:
-Xây dựng sơ bộ firmware trên ESP32 và xây dựng một chương trình nhận dữ liệu ổn định trên Pi. Mục tiêu là chứng minh toàn bộ chuỗi giao tiếp vật lý và phần mềm cơ bản hoạt động.
+## 1. Mục Tiêu và Phạm Vi Dự Án
 
-#### 📝 Nhiệm vụ:
-- [ ] **Môi trường:** Cài đặt ESP-IDF, QT, kiểm tra các linh kiện. 
-- [ ] **ESP32:** Lập trình đọc tất cả cảm biến: encoder (tốc độ), chiết áp (mức pin), và các nút bấm (chuyển số, chế độ lái) - với các tính năng liên quan đến nút bấm, xây dựng ở mức cơ bản, hoàn thiện dần sau. 
-- [ ] **ESP32:** Hoàn thiện logic tính toán tốc độ từ encoder theo công thức.
-- [ ] **ESP32:** Định nghĩa và gửi đi tất cả các khung tin CAN cần thiết theo "Ma trận Thông điệp". 
-- [ ] **Raspberry Pi:** Hoàn tất 100% môi trường cross-compile Qt/C++. 
-- [ ] **Raspberry Pi:** Xây dựng lớp `CanManager` trong C++ để nhận và giải mã tất cả tin nhắn CAN từ ESP32.
+### Mục tiêu Kỹ thuật
+- **Phát triển Cụm Đồng hồ Kỹ thuật số (IPC):** Xây dựng hệ thống IPC hoàn chỉnh trên Raspberry Pi 4, có khả năng hiển thị thông tin xe linh động, theo thời gian thực. Giao diện đồ họa sẽ được thiết kế bằng framework Qt/QML.
+- **Mô phỏng Bộ Điều khiển Xe (VCU):** VCU sẽ đóng vai trò là bộ não trung tâm, chịu trách nhiệm quản lý các trạng thái hoạt động của xe (Tắt, Sạc, Lái), xử lý dữ liệu từ các ECU mô phỏng, và ra quyết định điều khiển giao diện HMI.
+- **Thiết lập Giao thức Truyền thông CAN:** Xây dựng một mạng giao tiếp hoàn chỉnh sử dụng giao thức CAN (Controller Area Network) để đảm bảo việc truyền dữ liệu có cấu trúc và đáng tin cậy giữa VCU (Raspberry Pi 4) và các nút ECU mô phỏng (ESP32).
 
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Terminal trên Pi hiển thị chính xác và theo thời gian thực toàn bộ dữ liệu (tốc độ, mức pin, cấp số, chế độ lái...) khi tương tác với các cảm biến trên ESP32.
+### Mục tiêu Chất lượng
+- **Hiệu năng:** Đạt được thời gian khởi động hệ thống nhanh (dưới 2 giây) và giao diện đồ họa mượt mà (tối thiểu 30 FPS).
+- **Độ tin cậy:** Đảm bảo tính chính xác của các dữ liệu quan trọng hiển thị cho người lái như tốc độ, mức năng lượng và cảnh báo an toàn.
+- **Tiêu chuẩn:** Thiết kế HMI tuân thủ các nguyên tắc về an toàn chức năng theo ISO 26262 và sử dụng các biểu tượng (tell-tales) theo tiêu chuẩn quốc tế ISO 2575.
+- **Trải nghiệm Người dùng:** Tạo ra một sản phẩm có giao diện trực quan, thẩm mỹ và có khả năng tùy biến linh hoạt theo các chế độ lái (Eco, Normal, Sport).
 
----
+### Trong Phạm Vi (In-Scope)
+- **Phần cứng:** Một mô hình phần cứng hoàn chỉnh bao gồm VCU (Raspberry Pi 4), ECU (ESP32), các cảm biến mô phỏng (encoder, chiết áp, nút bấm), và màn hình HMI.
+- **Phần mềm:**
+    - Phát triển phần mềm VCU/HMI trên Raspberry Pi sử dụng C++ và Qt/QML.
+    - Phát triển firmware cho ECU trên ESP32.
+- **Chức năng HMI:** Phát triển giao diện người dùng đầy đủ chức năng cho các chế độ Lái xe (Eco/Normal/Sport) và sạc pin.
+- **Chức năng VCU:** Mô phỏng các chức năng VCU cốt lõi bao gồm quản lý máy trạng thái xe, xử lý mã lỗi chẩn đoán (DTC) cơ bản, và quản lý các chế độ lái.
 
-### Tuần 2: Lõi VCU và Model Dữ Liệu
+### Ngoài Phạm Vi (Out-of-Scope)
+- Không thực hiện quy trình chứng nhận chính thức theo tiêu chuẩn ISO 26262.
+- Không tích hợp các chức năng Hỗ trợ Lái xe Nâng cao (ADAS) phức tạp.
+- Không triển khai kết nối không dây (Wi-Fi, Bluetooth) hay các dịch vụ dựa trên đám mây.
+- Không phát triển các hệ thống vật lý như động cơ, pin thật hay hệ thống phanh.
 
-#### 🎯 Mục tiêu:
-Xây dựng bộ xử lý logic trung tâm và cấu trúc dữ liệu trên Pi, tách biệt hoàn toàn với lớp giao diện.
+## 2. Thiết Kế Cấp Cao (High-Level Design - HLD)
 
-#### 📝 Nhiệm vụ:
-- [ ] **Raspberry Pi (C++):** Xây dựng lớp `VehicleModel` theo mẫu Singleton cho mọi dữ liệu của xe. 
-- [ ] **Raspberry Pi (C++):** Tích hợp `CanManager` để cập nhật dữ liệu trực tiếp vào `VehicleModel`.
-- [ ] **Raspberry Pi (C++):** Xây dựng `VCUStateMachine` hoàn chỉnh để quản lý các trạng thái xe (OFF, ACC, READY_TO_DRIVE, CHARGING, FAULT) như trong bảng máy trạng thái.
+Kiến trúc hệ thống E/E được mô phỏng theo tiêu chuẩn ô tô hiện đại, tập trung vào vai trò chức năng của từng thành phần.
 
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Ứng dụng C++ trên Pi có thể tự động chuyển đổi trạng thái một cách logic. Log trên terminal phải thể hiện `VCUStateMachine` đã chuyển sang đúng trạng thái (ví dụ: `CHARGING`) khi có tin nhắn CAN tương ứng.
+### Các Thành Phần Chính
 
----
+* **VCU/IPC Domain Controller (Raspberry Pi):**
+    * Là bộ não trung tâm, đóng vai trò của một **Bộ điều khiển miền (Domain Controller)**, tích hợp cả chức năng điều khiển xe (VCU) và cụm đồng hồ (IPC).
+    * Chạy hệ điều hành Linux cấp cao để thực thi các logic phức tạp và quản lý hệ thống.
+    * Chịu trách nhiệm:
+        * Xử lý logic VCU chính: quản lý trạng thái xe, chẩn đoán lỗi (DTC).
+        * Vẽ và quản lý toàn bộ giao diện HMI hiệu năng cao bằng Qt/QML.
 
-### Tuần 3: Giao Diện Người - Máy (HMI LLD)
+* **Nút ECU Mô phỏng (ESP32):**
+    * Đóng vai trò là một ECU cấp thấp hơn (ví dụ: Body Control Module - BCM), chuyên thu thập dữ liệu từ môi trường vật lý.
+    * Chịu trách nhiệm:
+        * Đọc dữ liệu thô từ các cảm biến vật lý (encoder, chiết áp, nút bấm).
+        * Thực hiện xử lý sơ bộ (ví dụ: tính tốc độ từ xung encoder) và đóng gói dữ liệu vào các khung tin CAN.
 
-#### 🎯 Mục tiêu:
-Xây dựng giao diện, kết nối dữ liệu thật với giao diện đồ họa.
+* **Bus Giao tiếp (CAN Bus):**
+    * Dữ liệu được truyền đi trong các **khung tin (frames)** có cấu trúc chặt chẽ (ID, Payload,...), cho phép các bộ điều khiển giao tiếp một cách có tổ chức và đáng tin cậy.
 
-#### 📝 Nhiệm vụ:
-- [ ] **Raspberry Pi (C++/QML):** Đăng ký đối tượng `VehicleModel` và `VCUStateMachine` để QML có thể truy cập. 
-- [ ] **Raspberry Pi (QML):** Thiết kế màn hình lái xe chính (`DrivingScreen.qml`) với đầy đủ các thành phần: đồng hồ tốc độ, mức năng lượng, cấp số, Odometer, Trip Meter, và khu vực đèn báo. 
-- [ ] **Raspberry Pi (QML):** Triển khai logic QML để thay đổi giao diện (màu sắc, bố cục) khi chế độ lái thay đổi (ECO, NORMAL, SPORT). 
-- [ ] **Raspberry Pi (QML):** Thực hiện hoạt ảnh khởi động "quét kim đồng hồ" và "kiểm tra đèn báo".
+### Luồng Dữ Liệu Chính
 
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Một giao diện lái xe trên màn hình Pi, phản hồi với dữ liệu thật từ ESP32. Các chế độ lái có thể được chuyển đổi và giao diện thay đổi tương ứng.
+* **Thu thập Dữ liệu (ECU Node):** ESP32 liên tục giám sát các cảm biến vật lý (encoder, chiết áp, nút bấm) để phát hiện sự thay đổi.
 
----
+* **Xử lý Sơ bộ (ECU Node):** Dữ liệu thô từ cảm biến được xử lý để chuyển thành các giá trị có ý nghĩa (ví dụ: tính toán tốc độ từ xung encoder).
 
-### Tuần 4: Hoàn Thiện HMI và Luồng Logic
+* **Đóng gói & Gửi (ECU Node):** Dữ liệu đã xử lý được đưa vào một cấu trúc khung tin CAN với ID và Payload cụ thể. **CAN controller** sẽ tự động xử lý việc tạo khung tin hoàn chỉnh (bao gồm CRC, bit stuffing) và gửi nó qua CAN transceiver lên bus.
 
-#### 🎯 Mục tiêu:
-Xây dựng các màn hình phụ và luồng điều khiển hoàn chỉnh cho HMI, đảm bảo trải nghiệm người dùng liền mạch.
+* **Nhận & Giải mã (VCU):** Trên Raspberry Pi 4, lớp quản lý CAN (`CanManager`) sử dụng giao diện **`SocketCAN` của Linux kernel** để đọc các khung tin từ bus. **CAN controller (MCP2515)** sẽ tự động xác thực tính toàn vẹn của khung tin, tiếp đó đọc ID và trích xuất dữ liệu từ payload.
 
-#### 📝 Nhiệm vụ:
-- [ ] **Raspberry Pi (QML):** Thiết kế màn hình sạc pin (`ChargingScreen.qml`) với đầy đủ thông tin yêu cầu. 
-- [ ] **Raspberry Pi (QML):** Thiết kế lớp phủ cho các cảnh báo khẩn cấp (`WarningOverlay.qml`). 
-- [ ] **Raspberry Pi (C++/QML):** Viết logic điều hướng chính trong `main.qml` để hiển thị đúng màn hình (Chào mừng, Lái xe, Sạc pin, Cảnh báo lỗi) dựa trên trạng thái hiện tại của `VCUStateMachine`.
+* **Cập nhật Mô hình Dữ liệu (VCU):** Dữ liệu đã được giải mã được sử dụng để cập nhật trạng thái trong lớp dữ liệu trung tâm (`VehicleModel`). Lớp này phát ra các tín hiệu (Qt signals) để thông báo rằng dữ liệu đã thay đổi.
 
-#### ✅ Kết quả Yêu cầu/Đạt được:
-HMI hoàn chỉnh về mặt luồng hoạt động. Hệ thống có thể tự động chuyển đổi giữa tất cả các màn hình chính một cách chính xác theo ngữ cảnh của xe.
+* **Cập nhật Giao diện (HMI):** Các thành phần giao diện QML, được liên kết với các thuộc tính trong `VehicleModel`, sẽ tự động nhận được tín hiệu thay đổi, update giao diện với dữ liệu mới, đảm bảo hiệu suất tối ưu.
 
----
+## 3. Danh Sách Linh Kiện (Bill of Materials - BOM)
 
-### Tuần 5: Logic Chẩn Đoán Lỗi (DTC Management)
+Dưới đây là danh sách các linh kiện phần cứng cần thiết để xây dựng hệ thống.
 
-#### 🎯 Mục tiêu:
-Mô phỏng quy trình xử lý lỗi chẩn đoán "two-trip" theo chuẩn ô tô. 
+| Mục | Vai trò | Linh kiện | Số lượng | Ghi chú |
+| :-- | :--- | :--- | :--- | :--- |
+| 1 | VCU/IPC Controller | Raspberry Pi 4 Model B | 1 | Bộ não trung tâm của hệ thống. |
+| 2 | ECU Node | ESP32 DevKit | 1 | Đọc cảm biến và giao tiếp CAN. |
+| 3 | Màn hình HMI | Màn hình cảm ứng 7 inch, HDMI | 1 | Hiển thị giao diện người-máy (HMI). |
+| 4 | Module CAN (cho Pi) | Module MCP2515 | 1 | Bổ sung khả năng giao tiếp CAN cho Raspberry Pi 4. |
+| 5 | Module CAN (cho ESP32) | Module SN65HVD230 | 1 | Chuyển đổi tín hiệu logic 3.3V từ ESP32 sang tín hiệu vi sai của CAN bus. |
+| 6 | Cảm biến Tốc độ | Encoder quay (Rotary Encoder) | 1 | Mô phỏng tín hiệu tốc độ bánh xe. |
+| 7 | Cảm biến Mức Pin | Chiết áp (Potentiometer) 10K Ohm | 1 | Mô phỏng tín hiệu analog của mức pin. |
+| 8 | Nút bấm | Nút nhấn nhả (Push Buttons) | ~10-20 | Mô phỏng các thao tác của người lái. |
+| 9 | Breadboard & Dây cắm | Breadboard và bộ dây cắm | 1 bộ | Dùng để kết nối các linh kiện với nhau. |
+| 10 | Nguồn & Cáp | Nguồn USB-C, Micro USB, cáp HDMI | 1 bộ | Cung cấp năng lượng và tín hiệu. |
+| 11 | Báo hiệu Trạng thái | Đèn LED (LEDs) | ~10-20 | Dùng để báo hiệu nguồn, trạng thái hoạt động, truyền/nhận CAN, lỗi, xi nhan,..... |
+| 12 | Bảo vệ LED/GPIO | Điện trở (Resistors) 220/330 Ohm | ~5-10 | Giới hạn dòng cho LED, bảo vệ GPIO. |
 
-#### 📝 Nhiệm vụ:
-- [ ] **ESP32:** Mô phỏng một lỗi cảm biến và gửi tin nhắn CAN chứa mã lỗi DTC.
-- [ ] **ESP32:** Hoàn thiện toàn bộ logic còn lại cho firmware (các nút bấm,....). 
-- [ ] **Raspberry Pi (C++):** Xây dựng hoàn chỉnh lớp `DTCManager`.
-- [ ] **Raspberry Pi (C++):** Triển khai logic "two-trip" để xác nhận lỗi: lưu trạng thái "Pending", và chuyển sang "Confirmed" ở chu trình lái thứ hai. 
-- [ ] **Raspberry Pi (C++):** Lập trình logic lưu trữ DTC vào file. 
-- [ ] **Raspberry Pi (C++/QML):** Tích hợp `DTCManager` với HMI để điều khiển bật/tắt đèn báo lỗi (MIL). 
 
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Tính năng chẩn đoán hoạt động như tài liệu mô tả. Có thể mô phỏng lỗi trên ESP32, khởi động lại hệ thống, và thấy đèn MIL bật sáng chính xác ở chu trình lái thứ hai.
 
----
-
-### Tuần 6: Các Tính Năng Tính Toán và Lưu Trữ
-
-#### 🎯 Mục tiêu:
-Hoàn thiện các thuật toán tính toán phức tạp (DTE) và logic lưu trữ dữ liệu bền bỉ (Odometer).
-
-#### 📝 Nhiệm vụ:
-- [ ] **Raspberry Pi (C++):** Lập trình chức năng lưu trữ giá trị Odometer vào bộ nhớ non-volatile (bộ nhớ flash eMMC 
-của Pi) và đọc lại khi khởi động. 
-- [ ] **Raspberry Pi (C++):** Lập trình thuật toán để tính toán DTE một cách ổn định. 
-- [ ] **Raspberry Pi (QML):** Thêm các thành phần giao diện để hiển thị DTE, Odometer, Trip Meter và nút reset cho Trip Meter. 
-
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Odometer không bị reset sau mỗi lần tắt máy. DTE hiển thị một giá trị hợp lý và ổn định, thay đổi linh hoạt theo điều kiện lái.
-
----
-
-### Tuần 7: Tối Ưu Hóa Hiệu Năng và Ổn Định
-
-#### 🎯 Mục tiêu:
-Hoàn thiện nốt toàn bộ logic và giao diện, tập trung vào các yêu cầu phi chức năng (NFRs) để hệ thống chạy mượt và ổn định. 
-
-#### 📝 Nhiệm vụ:
-- [ ] **Tối ưu Thời gian Khởi động:** Phân tích log boot, loại bỏ các dịch vụ không cần thiết, và cấu hình ứng dụng Qt tự khởi động cùng hệ thống (`systemd`) để đạt mục tiêu dưới 2 giây (tùy chọn sẽ làm nếu có đủ thời gian). 
-- [ ] **Tối ưu Hiệu năng HMI:** Sử dụng các công cụ profiling của Qt để tối ưu hóa QML, đảm bảo tốc độ làm tươi luôn trên 30 FPS.
-- [ ] **Tăng độ tin cậy:** Triển khai cơ chế watchdog để tự khởi động lại ứng dụng nếu bị treo.
-- [ ] **Unit Test:** Viết các unit test cơ bản cho các lớp logic quan trọng (`DTCManager`, các hàm tính toán).
-
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Hệ thống khởi động nhanh, giao diện mượt mà trong mọi tình huống, và có khả năng tự phục hồi. Các yêu cầu NFR chính được đáp ứng.
-
----
-
-### Tuần 8: Hoàn Thiện & Tính Năng Mở Rộng (AI - Optional)
-
-#### 🎯 Mục tiêu:
-Kiểm thử, tối ưu và thử nghiệm tính năng nâng cao (nếu còn thời gian).
-
-#### 📝 Nhiệm vụ:
-- [ ] **Kiểm thử hệ thống:** Thực hiện các kịch bản kiểm thử quan trọng nhất trong tài liệu.
-- [ ] **Dọn dẹp và tối ưu code:** Rà soát, thêm bình luận, chuẩn hóa code cho cả hai nền tảng. 
-- [ ] **(Tùy chọn) Tích hợp AI - Điều khiển bằng giọng nói:**
-    - [ ] Nghiên cứu và tích hợp một thư viện nhận dạng giọng nói offline nhẹ cho Linux.
-    - [ ] Xây dựng 1-2 câu lệnh đơn giản (ví dụ: "Hey IPC, switch to Sport mode", "Hey IPC, what's my range?").
-    - [ ] Tích hợp lệnh thoại để thay đổi trạng thái trong `VehicleModel`.
-
-#### ✅ Kết quả Yêu cầu/Đạt được:
-Một sản phẩm hoàn chỉnh, ổn định, đáp ứng mọi yêu cầu cốt lõi và sẵn sàng để demo.
